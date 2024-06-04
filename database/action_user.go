@@ -20,6 +20,6 @@ func Add(bean interface{}) error  {
 }
 
 func GetUser(username,password string){
-	var user models.User
+	// var user models.User
 	
 }

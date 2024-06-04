@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"magic-mirror/database"
 	"magic-mirror/handlers"
-	routes "magic-mirror/routes"
 	"os"
 
 	"github.com/gin-contrib/cors"
@@ -23,8 +22,6 @@ func main() {
     gin.SetMode(gin.ReleaseMode)
     router:=gin.Default()
    
-    routes.WidgetRoutes(router)
-    routes.UserRoutes(router)
     router.Use(cors.Default())
     router.GET("/hello",handlers.HelloWorld)
     router.POST("/user/registration",handlers.Registration)
