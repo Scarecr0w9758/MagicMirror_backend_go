@@ -10,10 +10,11 @@ type Tokens struct{
 }
 
 type User struct{
-	Id uint
-	Login string
-	Name string
-	Password string
+	Id uint  `json:"id"`
+	Login string `json:"login"`
+	Name string `json:"name"`
+	Password string `json:"password"`
+	RememberToken string `json:"rememberToken"`
 }
 
 type Task struct {
