@@ -25,6 +25,7 @@ func main() {
     router.Use(cors.Default())
     router.GET("/hello",handlers.HelloWorld)
     router.POST("/user/registration",handlers.Registration)
+    router.POST("/user/sign-in",handlers.SignIn)
     // router.Use(cors.New(cors.Config{
     //     AllowOrigins:     []string{"https://foo.com"},
     //     AllowMethods:     []string{"PUT", "PATCH","POST"},
