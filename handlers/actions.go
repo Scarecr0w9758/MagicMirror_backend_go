@@ -5,9 +5,22 @@ import (
 	"magic-mirror/database"
 	"magic-mirror/models"
 	"net/http"
+	"net/mail"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
+
+func isStringEmail(str string) bool {
+	index:=strings.Index(str,"@")
+	return index > -1
+}
+
+func isValidEmail(email string) bool{
+	_,err:=mail.ParseAddress(email)
+	return err==nil
+
+}
 
 func HelloWorld(ctx *gin.Context){
 	// ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -22,7 +35,6 @@ func HelloWorld(ctx *gin.Context){
 		},
 	})
 }
-
 func Registration(context *gin.Context){
 	context.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	context.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -31,7 +43,7 @@ func Registration(context *gin.Context){
 	var user *models.User
 
 	decode :=json.NewDecoder(context.Request.Body).Decode(&user)
-
+	
 	if decode != nil{
 		context.JSON(http.StatusOK,gin.H{
 			"response":decode.Error(),
@@ -39,16 +51,18 @@ func Registration(context *gin.Context){
 		return
 	}
 
+
 	isExistByLogin := database.IsUserExistByLogin(user.Login)
 	if !isExistByLogin{
 		user:= &models.User{
 			Id:user.Id,
 			Login:user.Login,
+			Email:user.Email,
 			Name:user.Name,
 			Password: user.Password,
 			}
-		isSuccesAddError:=database.Add(user)		
-		if isSuccesAddError==nil{
+		isSuccessAddError:=database.Add(user)		
+		if isSuccessAddError==nil{
 			context.JSON(http.StatusOK,gin.H{
 				"response":gin.H{
 					"code":http.StatusOK,
@@ -81,26 +95,46 @@ func SignIn(context *gin.Context){
 		return
 	}
 
-	isExistByLogin := database.IsUserExistByLogin(user.Login)
-	if !isExistByLogin{
-		user:= &models.User{
-			Id:user.Id,
-			Login:user.Login,
-			Name:user.Name,
-			Password: user.Password,
-			}
-		isSuccesAddError:=database.Add(user)		
-		if isSuccesAddError==nil{
-			context.JSON(http.StatusOK,gin.H{
+	// Проверям нам прислали почту или логин
+	if isStringEmail(user.Login){
+		if isValidEmail(user.Login){
+			isExistByEmail := database.IsUserExistByEmail(user.Login)
+			if isExistByEmail{
+				context.JSON(http.StatusOK,gin.H{
 				"response":gin.H{
-					"code":http.StatusOK,
-					"message":"Вы успешно вошли!",
+					"message":"Вы успешно вошли, используя почту!",
+					"canEnter":true,
 				},
-			})
+				})
+			} else{
+				context.JSON(http.StatusUnprocessableEntity,gin.H{
+					"canEnter":false,
+					"errorMessage":"Почта не найдена",
+
+				})
+			}
 		}
+	} else {
+	isExistByLogin := database.IsUserExistByLogin(user.Login)
+		// context.JSON(http.StatusOK,gin.H{
+		// 		"response":gin.H{
+		// 			"code":database.GetDb().First(&user,models.User{Login:user.Login}),
+		// 			"getDb":database.GetDb(),
+		// 			"User":&user,
+		// 		},
+		// 	})
+	if isExistByLogin {
+		context.JSON(http.StatusOK,gin.H{
+		"response":gin.H{
+			"message":"Вы успешно вошли по логину!",
+			"canEnter":true,
+		},
+		})
+	
 	} else{
 		context.JSON(http.StatusUnprocessableEntity,gin.H{
-			"errorMessage":"Пользователь с таким логином существует",
+			"canEnter":false,
+			"errorMessage":"Логин не найден",
 		})
 	}
-}
+}}
